@@ -4,7 +4,7 @@ from pathlib import Path
 from json import load
 
 from .DataHolders import Block, Sprite
-
+from .BlockDefine import BlockDefinions
 
 class VM:
   def __init__(self, sb3):
@@ -82,6 +82,14 @@ class VM:
     elif opcode == "operator_subtract":
       ret = BlockDefinions.Operators.op_default_subtract(self, sprite, block)
     
+    elif opcode == "operator_multiply":
+      ret = BlockDefinions.Operators.op_default_multiply(self, sprite, block)
+
+    elif opcode == "operator_random":
+      ret = BlockDefinions.Operators.op_default_random(self, sprite, block)
+
+
+
     if block.next is None:
       return False, None, ret
     else:

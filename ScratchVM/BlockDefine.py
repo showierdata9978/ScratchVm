@@ -1,4 +1,6 @@
 from .DataHolders import Block, Sprite
+import random
+
 
 class BlockDefinions:
   def _option_get(vm, block, sprite):
@@ -23,14 +25,21 @@ class BlockDefinions:
     def op_default_add(vm, sprite:Sprite, block:Block):
         op1, op2 = BlockDefinions._option_get(vm, block, sprite)
       
-        return op1 + op2
+        return int(op1) + int(op2)
 
     def op_default_subtract(vm, sprite:Sprite, block:Block):
         opt1, opt2 = BlockDefinions._option_get(vm, block, sprite)
 
-        return opt1 - opt2
+        return int(opt1)- int(opt2)
 
-    def _op_default_multiply(vm , sprite:Sprite, block:Block):
+    def op_default_multiply(vm , sprite:Sprite, block:Block):
       opt1, opt2 = BlockDefinions._option_get(vm, block, sprite)
 
       return opt1 * opt2
+    
+    #implement all of the cmds defined in opCodes.json
+
+    def op_default_random(vm, sprite:Sprite, block:Block):
+      _from, to = BlockDefinions._option_get(vm, block, sprite)
+
+      return random.randint(_from, to)
