@@ -6,16 +6,12 @@ from json import load
 from .DataHolders import Block, Sprite
 from .BlockDefine import BlockDefinions
 
-class VM:
-  def __init__(self, sb3):
-    pth_to = Path("./temp/project").mkdir(parents=True, exist_ok=False)
-    shutil.unpack_archive(sb3, pth_to , format="zip")
-    with open(f"{str(pth_to)}/project.json") as f:
-      self.project_data = load(f)
 
-    self.sprites = {}
-    self.top_blocks = {}
-    
+def make_sprites(json):
+
+    sprites = {}
+    top_blocks = {}
+
     for sprite in self.project_data["targets"]:
         blocks = {}
         topBlocks = []
@@ -23,21 +19,21 @@ class VM:
           if block["topLevel"]:
             block = Block(id, block["opcode"], block["inputs"], block["fields"],block["topLevel"], block["next"], block["parent"])
             topBlocks[id] = block
-            if  block["opcode"] in self.top_blocks:
-              self.top_blocks[block["opcode"]].append({"id": id, "next": block["next"], "SpriteName": sprite["name"], "Block": block })
+            if block["opcode"] in top_blocks:
+              top_blocks[block["opcode"]].append({"id": id, "next": block["next"], "SpriteName": sprite["name"], "Block": block })
             else:
-              self.top_blocks[block["opcode"]] = [{"id": id, "next": block["next"], "SpriteName": sprite["name"] }]
+              top_blocks[block["opcode"]] = [{"id": id, "next": block["next"], "SpriteName": sprite["name"] }]
           else:
             blocks.append(Block(id, block["opcode"], block["inputs"], block["fields"],block["topLevel"],  block["next"], block["parent"]))
       
-    self.sprites[sprite["name"]] = Sprite(
+    sprites[sprite["name"]] = Sprite(
         sprite["isStage"], 
         sprite["name"], 
         sprite["broadcasts"], 
         sprite["variables"], 
         sprite["lists"], 
         blocks, 
-        topBlocks,
+        top_blocks,
         sprite["currentCostume"], 
         sprite["costumes"], 
         sprite["sounds"],
@@ -51,6 +47,18 @@ class VM:
         sprite["draggable"],
         sprite["rotationStyle"]
       )
+
+    return sprites, top_blocks
+
+class VM:
+  def __init__(self, sb3):
+    pth_to = Path("./temp/project").mkdir(parents=True, exist_ok=False)
+    shutil.unpack_archive(sb3, pth_to , format="zip")
+    with open(f"{str(pth_to)}/project.json") as f:
+      self.project_data = load(f)
+
+    self.sprites, self.top_blocks = make_sprites(self.project_data)
+    
     
 
   def call_top_block(self, opcode, msg = None):
@@ -73,22 +81,8 @@ class VM:
     ret = ""
     # Dont Worry about hats, they should be taken care of by calling function
 
-    if opcode == "operator_equals":
-      ret = BlockDefinions.Operators.op_default_equals(self, sprite, block)
-
-    elif opcode == "operator_add":
-      ret = BlockDefinions.Operators.op_default_add(self, sprite, block)
-
-    elif opcode == "operator_subtract":
-      ret = BlockDefinions.Operators.op_default_subtract(self, sprite, block)
-    
-    elif opcode == "operator_multiply":
-      ret = BlockDefinions.Operators.op_default_multiply(self, sprite, block)
-
-    elif opcode == "operator_random":
-      ret = BlockDefinions.Operators.op_default_random(self, sprite, block)
-
-
+    if opcode.startswith("operator_"):
+      ret = BlockDefinions.Operators.do(vm, sprite, block)
 
     if block.next is None:
       return False, None, ret
